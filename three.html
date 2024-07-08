@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Book Library</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: #333;
+        }
+        header {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        form {
+            max-width: 400px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"], button {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .book-list, .borrow-history {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .book {
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .book h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 20px;
+            color: #007bff;
+        }
+        .book p {
+            margin: 0;
+            font-size: 16px;
+            color: #555;
+        }
+        .book button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border-radius: 4px;
+        }
+        .book button:hover {
+            background-color: #0056b3;
+        }
+        .borrow-history ul {
+            list-style: none;
+            padding: 0;
+        }
+        .borrow-history li {
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Personal Book Library</h1>
+    </header>
+    <main>
+        <section id="add-book">
+            <h2>Add a Book</h2>
+            <form id="book-form">
+                <input type="text" id="title" placeholder="Title" required>
+                <input type="text" id="author" placeholder="Author" required>
+                <input type="text" id="category" placeholder="Category" required>
+                <button type="submit">Add Book</button>
+            </form>
+        </section>
+
+        <section id="search">
+            <h2>Search Books</h2>
+            <input type="text" id="search-input" placeholder="Search by title or author">
+        </section>
+
+        <section id="book-list" class="book-list">
+            <h2>Book List</h2>
+        </section>
+
+        <section id="borrow-history" class="borrow-history">
+            <h2>Borrowing History</h2>
+            <ul id="history-list"></ul>
+        </section>
+    </main>
+
+    <script>
+        const bookForm = document.getElementById('book-form');
+        const searchInput = document.getElementById('search-input');
+        const bookList = document.getElementById('book-list');
+        const historyList = document.getElementById('history-list');
+
+        let books = [];
+        let borrowingHistory = [];
+
+        bookForm.addEventListener('submit', addBook);
+        searchInput.addEventListener('input', searchBooks);
+
+        function addBook(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value.trim();
+            const author = document.getElementById('author').value.trim();
+            const category = document.getElementById('category').value.trim();
+
+            if (title === '' || author === '' || category === '') {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            const book = { title, author, category, borrowed: false };
+            books.push(book);
+            displayBooks(books);
+            bookForm.reset();
+        }
+
+        function searchBooks() {
+            const query = searchInput.value.trim().toLowerCase();
+            const filteredBooks = books.filter(book => 
+                book.title.toLowerCase().includes(query) || 
+                book.author.toLowerCase().includes(query)
+            );
+            displayBooks(filteredBooks);
+        }
+
+        function displayBooks(booksToDisplay) {
+            bookList.innerHTML = '<h2>Book List</h2>';
+            booksToDisplay.forEach((book, index) => {
+                const bookItem = document.createElement('div');
+                bookItem.className = 'book';
+                bookItem.innerHTML = `
+                    <h3>${book.title}</h3>
+                    <p>Author: ${book.author}</p>
+                    <p>Category: ${book.category}</p>
+                    <button onclick="toggleBorrow(${index})">${book.borrowed ? 'Return' : 'Borrow'}</button>
+                `;
+                bookList.appendChild(bookItem);
+            });
+        }
+
+        function toggleBorrow(index) {
+            books[index].borrowed = !books[index].borrowed;
+            const action = books[index].borrowed ? 'borrowed' : 'returned';
+            const historyEntry = `You ${action} "${books[index].title}" by ${books[index].author}`;
+            borrowingHistory.push(historyEntry);
+            displayBooks(books);
+            displayHistory();
+        }
+
+        function displayHistory() {
+            historyList.innerHTML = '';
+            borrowingHistory.forEach(entry => {
+                const historyItem = document.createElement('li');
+                historyItem.textContent = entry;
+                historyList.appendChild(historyItem);
+            });
+        }
+    </script>
+</body>
+</html>
